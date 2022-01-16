@@ -1,5 +1,6 @@
 from __future__ import division
 
+import heapq
 import torch
 import numpy as np
 import torch.optim as optim
@@ -15,6 +16,8 @@ import os
 import time
 from scipy.io import loadmat
 import copy
+
+from sklearn.impute import KNNImputer
 
 import os
 import sys
@@ -139,6 +142,84 @@ def test_error(STmodel, unknow_set, test_data, A_s, Missing0, device):
     return MAE, RMSE, MAPE, o, truth
 
 
+def kNN(A_new, test_set, full_set, unknow_set):
+    know_set = full_set - unknow_set
+
+    # prediction = np.zeros(test_set.shape)
+    # prediction[:, list(know_set)] = test_set[:, list(know_set)]
+
+    A = A_new
+    X = test_set
+
+    truth = test_set[list(unknow_set)].copy()
+
+    X[list(unknow_set)] = np.nan
+
+    imputer = KNNImputer(n_neighbors=3)
+
+    X_hat = imputer.fit_transform(X)
+
+    pred = X_hat[list(unknow_set)]
+
+    print('debug')
+
+    arr_unknow = []
+    for i in list(unknow_set):
+
+        dist_know = []
+        for j in list(know_set):
+            dist_know.append(A[i, j])
+
+        neighb_idx = np.asarray(list(know_set))[(-np.asarray(dist_know)).argsort()[:3]]
+        neighb_dist = A[i, neighb_idx]
+
+        X[neighb_idx]
+
+        neigb_var = X[neighb_idx][neighb_dist.argsort()[::-1]]
+        neigb_coef = (neighb_dist / neighb_dist.sum())[neighb_dist.argsort()[::-1]]
+
+        var_i = np.mean(neigb_var * neigb_coef[:, None], axis=0)
+        arr_unknow.append(var_i)
+
+    pred = np.stack(arr_unknow)
+    truth = X[list(unknow_set)]
+
+    # np.sum(np.abs(pred - truth)) / np.sum(truth)
+
+    print('debug')
+
+        # A_dist = A_new[index, list(know_set)]
+
+
+
+        # for index_k in list(know_set):
+        #     Distance.append(A_new[index, index_k])
+        #     min_num_index_list = map(Distance.index, heapq.nlargest(3, Distance))
+
+        # arr_neighb = []
+        # coef = []
+        # for choose in min_num_index_list:
+        #
+        #     arr_neighb.append(test_set[choose])
+        #     coef.append(A_new[index, choose])
+        #
+        # arr_neighb = np.stack(arr_neighb)
+
+    output = prediction.copy()
+    prediction[test_set == 0] = 0
+
+    missing_index = np.ones(np.shape(test_set))
+    missing_index[:, list(unknow_set)] = 0
+
+    test_mask = 1 - missing_index
+    test_mask[test_set == 0] = 0
+    MAE = np.sum(np.abs(prediction - test_set)) / np.sum(test_mask)
+
+    RMSE = np.sqrt(np.sum((prediction - test_set) * (prediction - test_set)) / np.sum(test_mask))
+    MAPE = np.sum(np.abs(prediction - test_set) / (test_set + 1e-5)) / np.sum(test_mask)
+    return MAE, RMSE, MAPE, output
+
+
 if __name__ == "__main__":
     """
     Model training
@@ -164,6 +245,14 @@ if __name__ == "__main__":
 
     # load dataset
     A,X,training_set,test_set,unknow_set,full_set,know_set,training_set_s,A_s,capacity = load_data(dataset)
+
+
+    # TODO kNN
+    MAE, RMSE, MAPE, udata_knn = kNN(A, X, full_set, full_set - know_set)
+    print(MAE, RMSE, MAPE)
+
+    sys.exit()
+
     # Define model
     STmodel = IGNNK(h, z, K)  # The graph neural networks
     STmodel.to(device)
@@ -175,6 +264,8 @@ if __name__ == "__main__":
     pred = []
     truth = []
     print('##################################    start training    ##################################')
+
+
     best_mae = 100000
     for epoch in range(max_iter):
         time_s = time.time()

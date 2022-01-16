@@ -16,11 +16,6 @@ import time
 from scipy.io import loadmat
 import copy
 
-import os
-import sys
-PROJ_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(PROJ_DIR)
-
 
 def load_data(dataset):
     '''Load dataset
@@ -32,17 +27,15 @@ def load_data(dataset):
     capacity: only works for NREL, each station's capacity
     '''
     capacity = []
-
-
-    # if dataset == 'metr':
-    #     A, X = load_metr_la_rdata()
-    #     X = X[:,0,:]
-    #     # print(X.shape)
-    #     # dis = loadmat("IGNNK_author/dist_metrla.mat")
-    #     # dis = dis['dis']
-    #     # dis_mx = dis / 100
-    #     # A = np.exp(-np.power(dis_mx / 5.57, 2))
-    #     # A[A < 0.01] = 0
+    if dataset == 'metr':
+        A, X = load_metr_la_rdata()
+        X = X[:,0,:]
+        # print(X.shape)
+        # dis = loadmat("IGNNK_author/dist_metrla.mat")
+        # dis = dis['dis']
+        # dis_mx = dis / 100
+        # A = np.exp(-np.power(dis_mx / 5.57, 2))
+        # A[A < 0.01] = 0
 
     # # TODO: Air
     pm25_arr_20160101_20201231_X_fp = '/local/home/air/wangshuo/data/air/imputation/IGNNK/pm25_arr_20160101_20201231_X.npy'
@@ -70,6 +63,7 @@ def load_data(dataset):
     # unknow_set = np.load("data/metr/unknow_infer.npy")
 
     unknow_set = set(unknow_set)
+
 
     full_set = set(range(0,X.shape[0]))        
     know_set = full_set - unknow_set
@@ -147,20 +141,21 @@ if __name__ == "__main__":
     # TODO air
     n_o_n_m = 62
 
-    dataset = "air"
+
+    dataset= "metr"
     h = 24
     z = 100
     K = 1
     n_m = 50
     n_u = 50
-    max_iter = 80
+    max_iter = 200
     learning_rate = 0.001
     E_maxvalue = 80
     batch_size = 4
     to_plot = True
     device = torch.device("cuda:0")
 
-    save_path = "%s/result_best/k=%d_T=%d_Z=%d/%s/" % (PROJ_DIR , K, h, z, dataset)
+    save_path = "./result_best/k=%d_T=%d_Z=%d/%s/" % (K, h, z, dataset)
 
     # load dataset
     A,X,training_set,test_set,unknow_set,full_set,know_set,training_set_s,A_s,capacity = load_data(dataset)
