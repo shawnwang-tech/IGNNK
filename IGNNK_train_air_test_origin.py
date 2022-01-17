@@ -8,10 +8,7 @@ import matplotlib.pyplot as plt
 from utils import *
 import random
 import pandas as pd
-# from basic_structure import IGNNK
-
-from GCLSTM import GC_LSTM
-
+from basic_structure import IGNNK
 import argparse
 import sys
 import os
@@ -113,7 +110,7 @@ def test_error(STmodel, unknow_set, test_data, A_s, Missing0, device):
         A_q = torch.from_numpy((calculate_random_walk_matrix(A_s).T).astype('float32')).to(device)
         A_h = torch.from_numpy((calculate_random_walk_matrix(A_s.T).T).astype('float32')).to(device)
         
-        imputation = STmodel(T_inputs, A_q, A_h, torch.from_numpy(A_s.astype('float32')).to(device))
+        imputation = STmodel(T_inputs, A_q, A_h)
         imputation = imputation.cuda().data.cpu().numpy()
         o[i:i+time_dim, :] = imputation[0, :, :]
     
@@ -163,13 +160,7 @@ if __name__ == "__main__":
     # load dataset
     A,X,training_set,test_set,unknow_set,full_set,know_set,training_set_s,A_s,capacity = load_data(dataset)
     # Define model
-
-
-    # STmodel = IGNNK(h, z, K)  # The graph neural networks
-
-    STmodel = GC_LSTM(h, z, K)
-
-
+    STmodel = IGNNK(h, z, K)  # The graph neural networks
     STmodel.to(device)
     criterion = nn.MSELoss()
     optimizer = optim.Adam(STmodel.parameters(), lr=learning_rate)
@@ -218,7 +209,7 @@ if __name__ == "__main__":
             
             optimizer.zero_grad()
 
-            X_res = STmodel(Mf_inputs, A_q, A_h, torch.from_numpy(A_dynamic.astype('float32')).to(device))  #Obtain the reconstruction
+            X_res = STmodel(Mf_inputs, A_q, A_h)  #Obtain the reconstruction
             
             loss = criterion(X_res*mask, outputs*mask)
             loss.backward()
