@@ -41,8 +41,8 @@ def load_data(dataset):
         # A[A < 0.01] = 0
 
     # # TODO: Air
-    pm25_arr_20160101_20201231_X_fp = '/local/home/air/wangshuo/data/air/imputation/IGNNK/pm25_arr_20160101_20201231_X.npy'
-    pm25_arr_20160101_20201231_obs_dist_adj_fp = '/local/home/air/wangshuo/data/air/imputation/IGNNK/pm25_arr_20160101_20201231_obs_dist_adj.npy'
+    pm25_arr_20160101_20201231_X_fp = '/local/backup/wangshuo/data/air/imputation/IGNNK/pm25_arr_20160101_20201231_X.npy'
+    pm25_arr_20160101_20201231_obs_dist_adj_fp = '/local/backup/wangshuo/data/air/imputation/IGNNK/pm25_arr_20160101_20201231_obs_dist_adj.npy'
     A = np.load(pm25_arr_20160101_20201231_obs_dist_adj_fp).astype(np.float16)
     X = np.load(pm25_arr_20160101_20201231_X_fp).astype(np.float16).T
     n_u = int(len(A) * 0.3)
